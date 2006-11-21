@@ -1,36 +1,8 @@
-Instead of a bug tracker, I'm just going to use a simple TODO list for now.
+The TODO list can be found on Trac for wp-plugins.org:
+http://dev.wp-plugins.org/report/9?COMPONENT=upcoming-events
+
+New ideas as well as bug reports can be filed as tickets in Trax.
+
 Target are, of course, subject to change and future versions will probably
-have more features in them than just what's on this list.
-
-
-Configuration Validation - 0.2
-
-	Currently little to no validation is done on items submitted using
-	the admin interface. Everything should be validated and the admin
-	should have to correct errors before changes are saved
-
-
-Remove Feeds - 0.2
-
-	0.1 provides no ability to remove a feed once it's been added. While
-	removing feeds will probably be rare, it should be possible.
-
-
-Date formatting option - 0.3
-
-	This one should be easy, but provide an option to define how the
-	date is formatted in the sidebar
-
-
-Make Popus of Events - 0.3
-
-	Use JavaScript and the DOM in order to make a fancy tooltip that
-	provides more information about an event
-
-
-Colors for Different Feeds - 0.4
-
-	Have the ability for the admin to define different colors for
-	each feed
-
+have more features in them than just what's on the list.
 
