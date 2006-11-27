@@ -53,6 +53,14 @@ function ue1_options() {
 	}
 }
 
+function ue1_widget($args) {
+	extract($args);
+	echo $before_widget;
+	echo $before_title . 'Upcoming Events' . $after_title;
+	ue1_get_events();
+	echo $after_widget;
+}
+
 function ue1_options_subpanel() {
 	global $table_prefix, $wpdb;
 
@@ -298,6 +306,13 @@ function ue1_echo_update_freq_select($name, $def) {
 	echo "</select>\n";
 }
 
+function ue1_widget_init() {
+	if ( function_exists('register_sidebar_widget') ) {
+		register_sidebar_widget('Upcoming Events', 'ue1_widget');
+	}
+}
+
 add_action('admin_menu', 'ue1_options');
-add_action('activate_upcomingevents/upcomingevents.php', 'ue1_install');
+add_action('activate_upcoming-events/upcoming-events.php', 'ue1_install');
+add_action('widgets_init', 'ue1_widget_init');
 
