@@ -34,7 +34,7 @@ require_once(dirname(__FILE__) . "/ical.class.php");
 require_once(dirname(__FILE__) . "/functions.php");
 
 function ue1_get_events() {
-	global $table_prefix, $wpdb, $ue1_version;
+	global $table_prefix, $wpdb, $ue1_version, $ue1_url;
 	$feeds = get_option("ue1_feeds");
 
 	$args = func_get_args();

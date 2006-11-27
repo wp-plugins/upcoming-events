@@ -18,15 +18,15 @@
 
 
 class ical {
-	public $prodid;
-        public $prodver;
-        public $calscale;
-	public $method;
-	public $events = array();
+	var $prodid;
+        var $prodver;
+        var $calscale;
+	var $method;
+	var $events = array();
 
-	private $lines;
+	var $lines;
 
-	public function parse_ics($file) {
+	function parse_ics($file) {
 		$this->lines = explode("\n", $file);
 
 		while($line = array_shift($this->lines)) {
@@ -115,16 +115,16 @@ class ical {
 }
 
 class ical_event {
-	public $summary;
-	public $location;
-	public $desc;
-	public $start_tz;
-	public $start_time;
-	public $start_date;
-	public $end_tz;
-	public $end_time;
-	public $end_date;
-	public $all_day;
+	var $summary;
+	var $location;
+	var $desc;
+	var $start_tz;
+	var $start_time;
+	var $start_date;
+	var $end_tz;
+	var $end_time;
+	var $end_date;
+	var $all_day;
 
 	function parse($data) {
 		while($line = array_shift($data)) {
