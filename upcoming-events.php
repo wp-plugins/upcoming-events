@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Upcoming Events
-Plugin URI: http://jacob.steenhagen.us
+Plugin URI: http://jacob.steenhagen.us/blog/?cat=14
 Description: Can take multiple iCalendar feeds and aggregate them into a listing of upcoming events suitable for use in the sidebar. Goto <a href="options-general.php?page=ue1">Options &raquo; Upcoming Events</a> to define feeds.
 Version: 0.1+
 Author: Jacob Steenhagen
@@ -27,7 +27,7 @@ Author URI: http://jacob.steenhagen.us
 
 global $ue1_version, $ue1_url;
 $ue1_version = "0.1+";
-$ue1_url = "http://jacob.steenhagen.us/blog/index.php?p=77";
+$ue1_url = "http://jacob.steenhagen.us/blog/?cat=14";
 
 require_once(dirname(__FILE__) . "/admin.php");
 require_once(dirname(__FILE__) . "/ical.class.php");
