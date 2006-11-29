@@ -1,33 +1,50 @@
 <?php
+/*  Copyright 2006  Jacob Steenhagen  (email : jacob@steenhagen.us)
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 
 class ical {
-	public $prodid;
-        public $prodver;
-        public $calscale;
-	public $method;
-	public $events = array();
+	var $prodid;
+        var $prodver;
+        var $calscale;
+	var $method;
+	var $events = array();
 
-	private $lines;
+	var $lines;
 
-	public function parse_ics($file) {
+	function parse_ics($file) {
 		$this->lines = explode("\n", $file);
 
 		while($line = array_shift($this->lines)) {
 			switch ( rtrim(strtolower($line)) ) {
 			case "begin:vcalendar":
-				self::parse_vcal();
+				ical::parse_vcal();
 				break;
 			case "begin:vtimezone":
-				self::parse_tzone();
+				ical::parse_tzone();
 				break;
 			case "begin:vevent":
-				self::parse_event();
+				ical::parse_event();
 				break;
 			default:
 			}
 		}
 		# The ICS file has been fully parsed. Now let's sort the events
-		usort($this->events, Array("self", "sort_date"));
+		usort($this->events, Array("ical", "sort_date"));
 	}
 
 	function parse_vcal() {
@@ -98,16 +115,16 @@ class ical {
 }
 
 class ical_event {
-	public $summary;
-	public $location;
-	public $desc;
-	public $start_tz;
-	public $start_time;
-	public $start_date;
-	public $end_tz;
-	public $end_time;
-	public $end_date;
-	public $all_day;
+	var $summary;
+	var $location;
+	var $desc;
+	var $start_tz;
+	var $start_time;
+	var $start_date;
+	var $end_tz;
+	var $end_time;
+	var $end_date;
+	var $all_day;
 
 	function parse($data) {
 		while($line = array_shift($data)) {
