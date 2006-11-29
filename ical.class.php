@@ -32,19 +32,19 @@ class ical {
 		while($line = array_shift($this->lines)) {
 			switch ( rtrim(strtolower($line)) ) {
 			case "begin:vcalendar":
-				self::parse_vcal();
+				ical::parse_vcal();
 				break;
 			case "begin:vtimezone":
-				self::parse_tzone();
+				ical::parse_tzone();
 				break;
 			case "begin:vevent":
-				self::parse_event();
+				ical::parse_event();
 				break;
 			default:
 			}
 		}
 		# The ICS file has been fully parsed. Now let's sort the events
-		usort($this->events, Array("self", "sort_date"));
+		usort($this->events, Array("ical", "sort_date"));
 	}
 
 	function parse_vcal() {
