@@ -61,6 +61,41 @@ function ue1_widget($args) {
 	echo $after_widget;
 }
 
+function ue1_update_options(&$feeds) {
+	global $table_prefix, $wpdb;
+
+	$validation_errors = array();
+
+	$show = (isset($_POST['ue1_show_powered'])) ? true : false;
+	update_option("ue1_show_powered", $show);
+	update_option("ue1_update_freq", $_POST['ue1_update_freq']);
+	update_option("ue1_show_num", $_POST['ue1_show_num']);
+	update_option("ue1_show_type", $_POST['ue1_show_type']);
+	$c = 0;
+	while(1) {
+		$c++;
+		$f = 'ue1_feed'.$c;
+		if ( isset($_POST[$f.'_update_freq']) ) {
+			array_push($feeds, array(
+				"display" => $_POST[$f.'_display'],
+				"code_name" => $_POST[$f.'_code_name'],
+				"url" => $_POST[$f.'_url'],
+				"update_freq" => $_POST[$f.'_update_freq'],
+				"show" => isset($_POST[$f.'_show']) ? true : false));
+			$t = $table_prefix . "ue1_cache";
+			$wpdb->query("INSERT IGNORE $t (code_name)
+				VALUES ('" . $wpdb->escape($_POST[$f.'_code_name']) . "')");
+		} else {
+			break;
+		}
+	}
+	update_option("ue1_feeds", $feeds);
+	?>
+<div class="updated">Upcoming Events Options have been updated.</div>
+	<?php
+	return $validation_errors;
+}
+
 function ue1_options_subpanel() {
 	global $table_prefix, $wpdb;
 
@@ -68,41 +103,16 @@ function ue1_options_subpanel() {
 	$validation_errors = array();
 
 	if ( isset($_POST['ue1_update']) || isset($_POST['ue1_add_feed']) ) {
-		$show = (isset($_POST['ue1_show_powered'])) ? true : false;
-		update_option("ue1_show_powered", $show);
-		update_option("ue1_update_freq", $_POST['ue1_update_freq']);
-		update_option("ue1_show_num", $_POST['ue1_show_num']);
-		update_option("ue1_show_type", $_POST['ue1_show_type']);
-		$c = 0;
-		while(1) {
-			$c++;
-			$f = 'ue1_feed'.$c;
-			if ( isset($_POST[$f.'_url']) ) {
-				array_push($feeds, array(
-					"display" => $_POST[$f.'_display'],
-					"code_name" => $_POST[$f.'_code_name'],
-					"url" => $_POST[$f.'_url'],
-					"update_freq" => $_POST[$f.'_update_freq'],
-					"show" => isset($_POST[$f.'_show']) ? true : false));
-				$t = $table_prefix . "ue1_cache";
-				$wpdb->query("INSERT IGNORE $t (code_name)
-					VALUES ('" . $wpdb->escape($_POST[$f.'_code_name']) . "')");
-			} else {
-				break;
-			}
-		}
-		update_option("ue1_feeds", $feeds);
-	?>
-<div class="updated">Upcoming Events Options have been updated. If you changed a feed URL, please click the button to "Update all feeds now"</div>
-	<?php
+		$validation_errors = ue1_update_options($feeds);
 	}
 
 	if ( isset($_POST['ue1_add_feed']) ) {
-		array_push($feeds, array("display"=>"New Feed"));
+		array_push($feeds, array("update_freq"=>"Default"));
 		echo '<div class="updated">Options have been added for an <a href="#feed' . count($feeds) . '">additional feed below</a></div>';
 	}
 
 	if ( isset($_POST['ue1_man_refresh']) ) {
+		$validation_errors = ue1_update_options($feeds);
 		$feeds = get_option("ue1_feeds");
 		foreach ($feeds as $feed) {
 			ue1_update_ics($feed["code_name"]);
@@ -110,6 +120,21 @@ function ue1_options_subpanel() {
 	?>
 <div class="updated">The cached feeds have been updated</div>
 	<?php
+	}
+	$c = 0;
+	while (1) {
+		$c++;
+		$f = 'ue1_feed'.$c;
+		if ( empty($_POST[$f."_update_freq"]) ) {
+			# Update Freq is pretty much guarnteed to be set as
+			# it's a select box
+			break;
+		}
+		if ( isset($_POST[$f."_update"]) ) {
+			$validation_errors = ue1_update_options($feeds);
+			ue1_update_ics($_POST[$f."_code_name"]);
+			echo '<div class="updated">Feed "<tt>'.$_POST[$f."_code_name"].'</tt>" has been updated</div>';
+		}
 	}
 	?>
   <div class="wrap">
@@ -164,7 +189,7 @@ for ($i = 1; $i < 20; $i++) {
     <em>Dispaly Name, Code Name, and Path are required for each feed. Each feed must have a unique Code Name</em>
 
 <?php
-if ( ! isset($feeds[0]["url"]) ) {
+if ( ! isset($feeds[0]["update_freq"]) ) {
 	$feeds = get_option('ue1_feeds');
 }
 
@@ -212,6 +237,25 @@ foreach ($feeds as $feed) {
     <input name="ue1_feed<?php echo $c; ?>_show" id="ue1_feed<?php echo $c; ?>_show" type="checkbox" value="1" <?php echo $checked; ?>/> <label for="ue1_feed<?php echo $c; ?>_show">Display in default sidebar</label>
   </td>
 </tr>
+<?php
+	if (! empty($feed["code_name"]) ) {
+?>
+<tr valign="top">
+  <th width="33%" scope="row">Feed Update:</th>
+  <td>
+    <input type="submit" name="ue1_feed<?php echo $c; ?>_update" value="Update Now">
+    Last Updated:
+<?php
+        $table = $table_prefix . "ue1_cache";
+        $sql = "SELECT last_update FROM $table WHERE code_name = '" . $wpdb->escape($feed["code_name"]) . "'";
+        $last_update = $wpdb->get_var($sql);
+	echo $last_update;
+?>
+  </td>
+</tr>
+<?php
+	}
+?>
 </table>
 <div class="submit">
   <input type="submit" name="ue1_update" value="Update Options &raquo;" />
@@ -229,8 +273,10 @@ foreach ($feeds as $feed) {
 
 <h3>Sample Sidebar Code</h3>
 
+<p>If you use the <a href="http://automattic.com/code/widgets/">WordPress Widget</a> plugin, you can add Upcoming Events to the sidebar using the Widget options on the Presentation tab. Currently this adds the same thing as the "Default settings" option below.<p>
+
 <h4>Use default settings</h4>
-<pre>
+<pre class="code">
 &lt;li&gt;
   &lt;h2&gt;Upcoming Events&lt;h2&gt;
   &lt;?php ue1_get_events()?&gt;
@@ -238,7 +284,7 @@ foreach ($feeds as $feed) {
 </pre>
 
 <h4>Display a feed with the Code Name of <tt>feed3</tt></h4>
-<pre>
+<pre class="code">
 &lt;li&gt;
   &lt;h2&gt;Upcoming Events&lt;h2&gt;
   &lt;?php ue1_get_events(array("feed3"))?&gt;
@@ -247,7 +293,7 @@ foreach ($feeds as $feed) {
 <em>Note: This will ignore the "Show This Feed" option</em>
 
 <h4>Display 5 aggregated events from <tt>feed2</tt> and <tt>feed3</tt></h4>
-<pre>
+<pre class="code">
 &lt;li&gt;
   &lt;h2&gt;Upcoming Events&lt;h2&gt;
   &lt;?php ue1_get_events(array("feed2", "feed3"), 5, "Events")?&gt;
@@ -255,7 +301,7 @@ foreach ($feeds as $feed) {
 </pre>
 
 <h4>Dispaly 6 weeks worth of events from default feeds</h4>
-<pre>
+<pre class="code">
 &lt;li&gt;
   &lt;h2&gt;Upcoming Events&lt;h2&gt;
   &lt;?php ue1_get_events(null, 6, "Weeks")?&gt;
