@@ -103,7 +103,7 @@ function ue1_get_events() {
 	}
 
 	$prev_date = "";
-	echo "<ul>\n <li style='display:none;'>\n  <ul>\n";
+	echo "<ul>\n <li style='display:none;'>\n  <ul>\n   <li> </li>\n";
 	foreach ($events as $e) {
 		if ( $prev_date != $e->start_date ) {
 			$prev_date = $e->start_date;
@@ -121,13 +121,7 @@ function ue1_get_events() {
 			$ts = rtrim($ts, "m");
 			$ts .= " - ";
 		}
-		echo "  <li>$ts" . $e->summary . "</li>\n";
-		echo "<!--\n";
-		echo $e->summary . "\n";
-		echo $e->start_date . "\n";
-		echo $e->end_date . "\n";
-		echo $e->desc . "\n";
-		echo "-->\n";
+		echo "   <li>$ts" . htmlentities($e->summary) . "</li>\n";
 	}
 	echo "  </ul>\n </li>\n</ul>\n";
 
