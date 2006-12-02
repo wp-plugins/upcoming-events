@@ -132,8 +132,8 @@ function ue1_get_events() {
 	echo "  </ul>\n </li>\n</ul>\n";
 
 	if ( get_option("ue1_show_powered") ) {
-		echo "<p><small>Powered by ";
-		echo "<a href='$ue1_url'>Upcoming Events v$ue1_version</a></small></p>\n";
+		echo '<ul><li><small>Powered by ';
+		echo "<a href='$ue1_url'>Upcoming Events v$ue1_version</a></small></li></ul>\n";
 	}
 }
 
