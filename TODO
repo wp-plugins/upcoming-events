@@ -1,7 +1,7 @@
 The TODO list can be found on Trac for wp-plugins.org:
-http://dev.wp-plugins.org/report/9?COMPONENT=upcoming-events
+http://jacob.steenhagen.us/bugs/buglist.cgi?product=Upcoming+Events&resolution=---
 
-New ideas as well as bug reports can be filed as tickets in Trax.
+New ideas as well as bug reports can be filed in my Bugzilla install at http://jacob.steenhagen.us/bugs/
 
 Target are, of course, subject to change and future versions will probably
 have more features in them than just what's on the list.
