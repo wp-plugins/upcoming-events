@@ -33,6 +33,14 @@ require_once(dirname(__FILE__) . "/admin.php");
 require_once(dirname(__FILE__) . "/ical.class.php");
 require_once(dirname(__FILE__) . "/functions.php");
 
+add_action('wp_head', 'ue1_css');
+
+function ue1_css() {
+	echo "<style type=\"text/css\">\n";
+	echo "@import url(" . get_bloginfo('url')  . "/wp-content/plugins/upcoming-events/events.css.php);\n";
+	echo "</style>\n";
+}
+
 function ue1_get_events() {
 	global $table_prefix, $wpdb, $ue1_version, $ue1_url;
 	$feeds = get_option("ue1_feeds");
@@ -108,7 +116,7 @@ function ue1_get_events() {
 		if ( $prev_date != $e->start_date ) {
 			$prev_date = $e->start_date;
 			echo "  </ul>\n </li>\n";
-			echo " <li>" . date("D, M j", $e->start_time) . "\n";
+			echo " <li><span class='ue1_date'>" . date("D, M j", $e->start_time) . "</span>\n";
 			echo "  <ul>\n";
 		}
 		$ts = "";
