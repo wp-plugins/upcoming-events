@@ -65,17 +65,28 @@ function ue1_update_options(&$feeds) {
 	global $table_prefix, $wpdb;
 
 	$validation_errors = array();
+	$error_display = array();
 
-	$show = (isset($_POST['ue1_show_powered'])) ? true : false;
-	update_option("ue1_show_powered", $show);
-	update_option("ue1_update_freq", $_POST['ue1_update_freq']);
-	update_option("ue1_show_num", $_POST['ue1_show_num']);
-	update_option("ue1_show_type", $_POST['ue1_show_type']);
 	$c = 0;
+	$seen_codes = array();
 	while(1) {
 		$c++;
 		$f = 'ue1_feed'.$c;
 		if ( isset($_POST[$f.'_update_freq']) ) {
+			$code_name = $_POST[$f.'_code_name'];
+			if (! preg_match("/^[A-Za-z0-9_-]+$/", $code_name) ) {
+				$validation_errors['bad_code_'.$c] = 1;
+				array_push($error_display, "Code <tt>" . htmlentities($code_name) . "</tt> contains invalid characters. Valid characters are letters, numbers, underscore (_) and dash (-).");
+			}
+			if ( isset($seen_codes[$code_name]) ) {
+				$validation_errors['dup_code_'.$code_name] = 1;
+				array_push($error_display, "Duplicate code: <tt>" . htmlentities($code_name) . "</tt>");
+			}
+			$seen_codes[$code_name] = 1;
+			if (! preg_match("@^(?:/|http://)@", $_POST[$f.'_url']) ) {
+				$validation_errors['bad_url_'.$c] = 1;
+				array_push($error_display, "The path for the <tt>" . htmlentities($_POST[$f.'_display']) . "</tt> feed is invalid. A path for a local file should start with <tt>/</tt> and for a web ical feed it should start with <tt>http://</tt>");
+			}
 			array_push($feeds, array(
 				"display" => $_POST[$f.'_display'],
 				"code_name" => $_POST[$f.'_code_name'],
@@ -89,10 +100,23 @@ function ue1_update_options(&$feeds) {
 			break;
 		}
 	}
-	update_option("ue1_feeds", $feeds);
-	?>
-<div class="updated">Upcoming Events Options have been updated.</div>
-	<?php
+	if (empty($validation_errors)) {
+		$show = (isset($_POST['ue1_show_powered'])) ? true : false;
+		update_option("ue1_show_powered", $show);
+		update_option("ue1_update_freq", $_POST['ue1_update_freq']);
+		update_option("ue1_show_num", $_POST['ue1_show_num']);
+		update_option("ue1_show_type", $_POST['ue1_show_type']);
+		update_option("ue1_feeds", $feeds);
+		echo "<div class='updated'>Upcoming Events Options have been updated.</div>\n";
+	} else {
+		echo "<div class='error'>Options not updated. Please correct the following errors\n";
+		echo "<ul>\n";
+		foreach ($error_display as $err) {
+			echo "  <li>$err</li>\n";
+		}
+		echo "</ul>\n";
+		echo "</div>\n";
+	}
 	return $validation_errors;
 }
 
@@ -211,7 +235,16 @@ foreach ($feeds as $feed) {
     must be displayed. This includes here in the admin panel.</em>
   </td>
 </tr>
-<tr valign="top"> 
+<?php
+$code_class = "";
+if ( isset($validation_errors['bad_code_'.$c]) ) {
+	$code_class = "error";
+}
+if ( isset($validation_errors['dup_code_'.$feed["code_name"]]) ) {
+	$code_class = "error";
+}
+?>
+<tr valign="top" class="<?php echo $code_class; ?>"> 
   <th width="33%" scope="row">Code Name:</th>
   <td>
     <input type="text" name="ue1_feed<?php echo $c; ?>_code_name" size="60" value="<?php echo htmlentities($feed["code_name"]); ?>" />
@@ -219,7 +252,13 @@ foreach ($feeds as $feed) {
     in seperate sidebar boxes.</em>
   </td>
 </tr>
-<tr valign="top"> 
+<?php
+$url_class = "";
+if ( isset($validation_errors['bad_url_'.$c]) ) {
+	$url_class = "error";
+}
+?>
+<tr valign="top" class="<?php echo $url_class; ?>"> 
   <th width="33%" scope="row">Path:</th>
   <td>
     <input type="text" name="ue1_feed<?php echo $c; ?>_url" size="60" value="<?php echo htmlentities($feed["url"]); ?>" />
