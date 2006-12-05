@@ -26,6 +26,18 @@ of the "Options" tab.
 
 === Release Notes ===
 
+For a full revision log, see http://dev.wp-plugins.org/log/upcoming-events
+
+== v0.3 - 6-Dec-2006 ==
+
+* Removed a debugging statement that caused days/weeks to display incorrectly
+* Individual iCal feeds can be immediately updated from the admin page
+* The events list is now valid XHTML 1.0 Transitional
+* The admin page now produces valid XHTML 1.0 Transitional
+* CSS styles are in their own seperate file for easier modification
+* More information is provided in a tooltip-like popup for each event
+* Basic error checking is done when making changes on the admin page
+
 == v0.2 - 29-Nov-2006 ==
 
 * Now runs on PHP 4 (used to have PHP 5 specific code)
