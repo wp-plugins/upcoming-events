@@ -24,4 +24,14 @@ the Plugins page in the WordPress Admin Interface to active the plugin.
 Configuration options will then be available from the "Upcoming Events" page
 of the "Options" tab.
 
+=== Release Notes ===
+
+== v0.2 - 29-Nov-2006 ==
+
+* Now runs on PHP 4 (used to have PHP 5 specific code)
+* Can now be loaded as a sidebar widget
+
+== v0.1 - 22-Nov-2006 ==
+
+* Initial release
 
