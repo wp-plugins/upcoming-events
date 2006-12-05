@@ -110,8 +110,10 @@ function ue1_get_events() {
 		break;
 	}
 
+	$popup_html = array("empty");
 	$prev_date = "";
 	echo "<ul>\n <li style='display:none;'>\n  <ul>\n   <li> </li>\n";
+	$i = 1;
 	foreach ($events as $e) {
 		if ( $prev_date != $e->start_date ) {
 			$prev_date = $e->start_date;
@@ -129,12 +131,165 @@ function ue1_get_events() {
 			$ts = rtrim($ts, "m");
 			$ts .= " - ";
 		}
-		echo "   <li>$ts" . htmlentities($e->summary) . "</li>\n";
+		echo "   <li id='ue1-$i' onmouseover='ue1_show($i)' onmouseout='ue1_hide($i)'>$ts" . htmlentities($e->summary) . "</li>\n";
+		$popup = '<div id="ue1-popup-'.$i.'" class="ue1-popup">';
+		if ( $e->same_day ) {
+			$popup .= '<h3 class="ue1-popup-date">';
+			$popup .= date("F j, Y", $e->start_time);
+			$popup .= '</h3>';
+			if (! $e->all_day) {
+				$popup .= '<h4 class="ue1-popup-time">';
+				$popup .= date("g:i", $e->start_time);
+				$popup .= " - ";
+				$popup .= date("g:i", $e->end_time);
+				$popup .= '</h4>';
+			}
+		} else {
+			if ( date("n", $e->start_time) == date("n", $e->end_time) ) {
+				# At least it's all in the same month!
+				$popup .= '<h3 class="ue1-popup-date">';
+				$popup .= date("F j", $e->start_time);
+				$popup .= " - ";
+				$popup .= date("j, Y", strtotime($e->end_date));
+				$popup .= '</h3>';
+			} elseif ( date("Y", $e->start_time) == date("Y", $e->end_time) ) {
+				# Well, the same year is good, right?
+				$popup .= '<h3 class="ue1-popup-date">';
+				$popup .= date("M j", $e->start_time);
+				$popup .= " - ";
+				$popup .= date("M j, Y", strtotime($e->end_date));
+				$popup .= '</h3>';
+			} else {
+				# Not the same month or year...
+				$popup .= '<h3 class="ue1-popup-date">';
+				$popup .= date("M j, Y", $e->start_time);
+				$popup .= " - ";
+				$popup .= date("M j, Y", strtotime($e->end_date));
+				$popup .= '</h3>';
+			}
+		}
+		$popup .= '<div class="ue1-popup-summary">';
+		$popup .= $e->summary;
+		$popup .= '</div>';
+		if ( $e->location ) {
+			$popup .= '<div class="ue1-popup-location">';
+			$popup .= $e->location;
+			$popup .= '</div>';
+		}
+		if ( $e->desc ) {
+			$popup .= '<div class="ue1-popup-desc">';
+			$popup .= $e->desc;
+			$popup .= '</div>';
+		}
+		$popup .= '</div>';
+		array_push($popup_html, $popup);
+		$i++;
 	}
 	echo "  </ul>\n </li>\n</ul>\n";
 
+?>
+<script type="text/javascript">
+<!--
+var ue1_curr_popup = "";
+var ue1_curr_popup_i = 0;
+var hovering_popup = false;
+var create_timer = "";
+var destroy_timer = "";
+
+function ue1_show(i) {
+	if (! document.getElementById ) {
+		// If we don't support DOM, don't try to run
+		return;
+	}
+	if (hovering_popup) { return; }
+	if (ue1_curr_popup_i == i) {
+		if (destroy_timer) {
+			clearTimeout(destroy_timer);
+			destroy_timer = "";
+		}
+		return;
+	}
+	if (ue1_curr_popup) {
+		if (destroy_timer) {
+			clearTimeout(destroy_timer);
+		}
+		destroy_timer = setTimeout("ue1_destroy("+ue1_curr_popup_i+")", 500);
+	}
+	if (create_timer) {
+		clearTimeout(create_timer);
+		create_timer = "";
+	}
+	create_timer = setTimeout("ue1_create("+i+")", 1000);
+}
+
+function ue1_create(i) {
+	ue1_event = document.getElementById("ue1-"+i);
+
+	ue1_curr_popup_i = i;
+	ue1_curr_popup = document.createElement("div");
+	ue1_curr_popup.innerHTML = popup[i];
+	ue1_curr_popup.style.position = 'absolute';
+	if (ue1_curr_popup.addEventListener) {
+		// Unfortunately, not everybody supports this method. If they
+		// don't, then the popup just disappears sooner
+		ue1_curr_popup.addEventListener("mouseover", ue1_popup_hover, false);
+		ue1_curr_popup.addEventListener("mouseout", ue1_popup_unhover, false);
+	}
+
+	ue1_event.appendChild(ue1_curr_popup);
+}
+
+function ue1_hide(i) {
+	if (! document.getElementById ) {
+		// If we don't support DOM, don't try to run
+		return;
+	}
+	if (hovering_popup) { return; }
+        if (create_timer) {
+                clearTimeout(create_timer);
+                create_timer = "";
+        }
+	if (ue1_curr_popup) {
+		destroy_timer = setTimeout("ue1_destroy("+i+")", 800);
+	}
+}
+
+function ue1_destroy(i) {
+	ue1_event = document.getElementById("ue1-"+i);
+	ue1_event.removeChild(ue1_curr_popup);
+	ue1_curr_popup = "";
+	ue1_curr_popup_i = 0;
+	if (destroy_timer) {
+		clearTimeout(destroy_timer);
+		destroy_timer = "";
+	}
+	hovering_popup = false; // There's no popup to hover
+}
+
+function ue1_popup_hover() {
+	hovering_popup = true;
+	if (destroy_timer) {
+		clearTimeout(destroy_timer);
+		destroy_timer = "";
+	}
+}
+
+function ue1_popup_unhover() {
+	hovering_popup = false;
+}
+
+var popup = new Array();
+<?php
+	for ($i = 1; $i < count($popup_html); $i++) {
+		echo "popup[$i] = '" . addslashes($popup_html[$i]) . "';\n";
+	}
+?>
+//-->
+</script>
+
+<?php
 	if ( get_option("ue1_show_powered") ) {
-		echo '<ul><li><small>Powered by ';
+		echo '<ul style="list-style-type:none;list-style-image:none;"><li><small>Powered by ';
 		echo "<a href='$ue1_url'>Upcoming Events v$ue1_version</a></small></li></ul>\n";
 	}
 }

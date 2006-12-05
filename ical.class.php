@@ -125,6 +125,7 @@ class ical_event {
 	var $end_time;
 	var $end_date;
 	var $all_day;
+	var $same_day;		// Does this event start and end on one day?
 
 	function parse($data) {
 		while($line = array_shift($data)) {
@@ -151,9 +152,19 @@ class ical_event {
 				$this->all_day=true;
 			} elseif ( preg_match("/^dtend;value=date:(.+)$/i", $line, $m) ) {
 				$this->end_time = strtotime($m[1]);
-				$this->end_date = $m[1];
+				$this->end_date = date("Ymd", strtotime($m[1] . " -1 day"));
 				$this->all_day=true;
+			} elseif ( preg_match("/^duration:(.+)$/i", $line, $m) ) {
+				$dur = array();
+				if ( preg_match("/T(\d+)H/i", $m[1], $p) ) {
+					array_push($dur, "+".$p[1]." hours");
+				}
+				$this->end_time = strtotime(implode(" ", $dur), $this->start_time);
+				$this->end_date = date("Ymd", $this->end_time);
 			}
+		}
+		if ( $this->start_date == $this->end_date ) {
+			$this->same_day = true;
 		}
 	}
 }
