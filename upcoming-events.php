@@ -169,19 +169,20 @@ function ue1_get_events() {
 			}
 		}
 		$popup .= '<div class="ue1-popup-summary">';
-		$popup .= $e->summary;
+		$popup .= htmlentities($e->summary);
 		$popup .= '</div>';
 		if ( $e->location ) {
 			$popup .= '<div class="ue1-popup-location">';
-			$popup .= $e->location;
+			$popup .= htmlentities($e->location);
 			$popup .= '</div>';
 		}
 		if ( $e->desc ) {
 			$popup .= '<div class="ue1-popup-desc">';
-			$popup .= $e->desc;
+			$popup .= htmlentities($e->desc);
 			$popup .= '</div>';
 		}
 		$popup .= '</div>';
+		$popup = preg_replace("/\n/", "<br />", $popup);
 		array_push($popup_html, $popup);
 		$i++;
 	}
