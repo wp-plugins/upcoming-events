@@ -18,9 +18,9 @@
 
 
 function ue1_install() {
-	global $table_prefix, $wpdb;
+	global $wpdb;
 
-	$table_name = $table_prefix . "ue1_cache";
+	$table_name = $wpdb->prefix . "ue1_cache";
 
 	if ( $wpdb->get_var("show tables like '$table_name'") != $table_name ) {
 		require_once(ABSPATH . "wp-admin/upgrade-functions.php");
@@ -62,7 +62,7 @@ function ue1_widget($args) {
 }
 
 function ue1_update_options(&$feeds) {
-	global $table_prefix, $wpdb;
+	global $wpdb;
 
 	$validation_errors = array();
 	$error_display = array();
@@ -93,7 +93,7 @@ function ue1_update_options(&$feeds) {
 				"url" => $_POST[$f.'_url'],
 				"update_freq" => $_POST[$f.'_update_freq'],
 				"show" => isset($_POST[$f.'_show']) ? true : false));
-			$t = $table_prefix . "ue1_cache";
+			$t = $wpdb->prefix . "ue1_cache";
 			$wpdb->query("INSERT IGNORE $t (code_name)
 				VALUES ('" . $wpdb->escape($_POST[$f.'_code_name']) . "')");
 		} else {
@@ -121,7 +121,7 @@ function ue1_update_options(&$feeds) {
 }
 
 function ue1_options_subpanel() {
-	global $table_prefix, $wpdb;
+	global $wpdb;
 
 	$feeds = array();
 	$validation_errors = array();
@@ -287,7 +287,7 @@ if ( isset($validation_errors['bad_url_'.$c]) ) {
     <input type="submit" name="ue1_feed<?php echo $c; ?>_update" value="Update Now" />
     Last Updated:
 <?php
-        $table = $table_prefix . "ue1_cache";
+        $table = $wpdb->prefix . "ue1_cache";
         $sql = "SELECT last_update FROM $table WHERE code_name = '" . $wpdb->escape($feed["code_name"]) . "'";
         $last_update = $wpdb->get_var($sql);
 	echo $last_update;

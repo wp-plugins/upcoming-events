@@ -42,7 +42,7 @@ function ue1_css() {
 }
 
 function ue1_get_events() {
-	global $table_prefix, $wpdb, $ue1_version, $ue1_url;
+	global $ue1_version, $ue1_url;
 	$feeds = get_option("ue1_feeds");
 
 	$args = func_get_args();
