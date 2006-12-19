@@ -126,6 +126,12 @@ class ical_event {
 	var $end_date;
 	var $all_day;
 	var $same_day;		// Does this event start and end on one day?
+	var $recurs;		// Does this event have recurrence rules?
+	var $r_freq;
+	var $r_interval;
+	var $r_until;
+	var $r_bymonth;
+	var $r_byday;
 
 	function parse($data) {
 		while($line = array_shift($data)) {
@@ -161,11 +167,161 @@ class ical_event {
 				}
 				$this->end_time = strtotime(implode(" ", $dur), $this->start_time);
 				$this->end_date = date("Ymd", $this->end_time);
+			} elseif (preg_match("/^rrule:(.+)$/i", $line, $m) ) {
+				$this->recurs = true;
+				$rinfo = explode(";", $m[1]);
+				foreach ($rinfo as $info) {
+					if ( preg_match("/^freq=(.+)$/i", $info, $m) ) {
+						$this->r_freq = strtolower($m[1]);
+					} elseif (preg_match("/^interval=(\\d+)$/i", $info, $m) ) {
+						$this->r_interval = $m[1];
+					} elseif (preg_match("/^until=(\\d+)$/i", $info, $m) ) {
+						$this->r_until = strtotime($m[1]);
+					} elseif (preg_match("/^bymonth=(\\d+)$/i", $info, $m) ) {
+						$this->r_bymonth = $m[1];
+					} elseif (preg_match("/^byday=(.+)$/i", $info, $m) ) {
+						$this->r_byday = $m[1];
+					}
+				}
+				# Unix can't use a timestamp past 2038
+				if ( empty($this->r_until) ) {
+					$this->r_until = strtotime("20380118");
+				}
+				# If we never defined an interval, make it '1'
+				if ( empty($this->r_interval) ) {
+					$this->r_interval = 1;
+				}
 			}
 		}
 		if ( $this->start_date == $this->end_date ) {
 			$this->same_day = true;
 		}
+	}
+
+	function next_recurrence ( $after = "") {
+		if ( empty($after) ) {
+			$after = time();
+		}
+
+		if ( $this->r_until < $after ) {
+			# Event is done. No more recurrences.
+			return null;
+		}
+		if ( isset($this->r_byday) ) {
+			$save_start_time = $this->start_time;
+			switch ($this->r_freq) {
+			case "yearly":
+				# If we're doing this "BYDAY", which we are
+				# because we're here, we should also have
+				# something that tells us what month we're in,
+				# such as "BYMONTH"
+				if ( empty($this->r_bymonth) ) {
+					# I think this is an error condition
+					return null;
+				}
+				while (1) {
+					# Get year for this recurrence
+					$e_year = date("Y", $this->start_time);
+					$e_month = $this->r_bymonth;
+					if ( strlen($e_month) == 1 ) {
+						$e_month = "0$e_month";
+					}
+					if ( preg_match("/^(\\d)(.+)$/", $this->r_byday, $m) ) {
+						# We're dealing with something
+						# like 1st sunday, etc. Start
+						# at the 1st of the month
+						$this->start_time = strtotime($e_year.$e_month."01");
+						# We're going to step forward
+						# a little
+						$i = $m[1] - 1;
+						$d = $m[2]; # Day of week
+						if (! empty($i)) {
+							$this->start_time = strtotime("$i week", $this->start_time);
+						}
+						$dow = "";
+						switch (strtolower($d)) {
+							case "su":
+								$dow = "Sunday";
+								break;
+							case "mo":
+								$dow = "Monday";
+								break;
+							case "tu":
+								$dow = "Tuesday";
+								break;
+							case "we":
+								$dow = "Wednesday";
+								break;
+							case "th":
+								$dow = "Thursday";
+								break;
+							case "fr":
+								$dow = "Friday";
+								break;
+							case "sa":
+								$dow = "Saturday";
+								break;
+						}
+						if ( date("l", $this->start_time) != $dow ) {
+							# This isn't the day of
+							# the week in question.
+							# Forward to it.
+							$this->start_time = strtotime("Next $dow", $this->start_time);
+						}
+						if ($this->start_time > $after) {
+							# This is it
+							break;
+						} else {
+							# Advance int years and
+							# try again
+							$this->start_time = strtotime($this->r_interval." years", $this->start_time);
+						}
+					} else {
+						# Negative day. Don't support yet.
+						return null;
+					}
+				}
+				break;
+			default:
+				# We don't handle this yet
+				return null;
+			}
+			$time_diff = $this->start_time - $save_start_time;
+			$this->end_time = $this->end_time + $time_diff;
+		# End of $this->r_byday
+		} else {
+			# We haven't been told specifics of what day this
+			# should be on, so simply add time to the start_time
+			# until we make it past $after.
+			while ($this->start_time <= $after) {
+				# Figure out what we're adding (years, etc).
+				$add = "";
+				switch ($this->r_freq) {
+				case "yearly":
+					$s_add = " year";
+					break;
+				default:
+					# We don't handle this yet
+					return null;
+				}
+				# Add the same amount of time to the start and
+				# end of the event.
+				$this->start_time = strtotime($this->r_interval . $s_add, $this->start_time);
+				$this->end_time = strtotime($this->r_interval . $s_add, $this->end_time);
+			}
+		}
+		# We've figured out when the next recurrance would be. Let's
+		# make sure it makes sense, set the *_date variables and return
+		# the next recurrance.
+                if ( $this->r_until < $this->start_time ) {
+			# What would be the next scheduled recurrence is after
+			# the last date of this event
+                        return null;
+                }
+
+		$this->start_date = date("Ymd", $this->start_time);
+		$this->end_date = date("Ymd", $this->end_time);
+		return date("Ymd", $this->start_time);
 	}
 }
 

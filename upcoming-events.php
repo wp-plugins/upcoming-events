@@ -45,6 +45,8 @@ function ue1_get_events() {
 	global $ue1_version, $ue1_url;
 	$feeds = get_option("ue1_feeds");
 
+	$exec_start = microtime_float();
+
 	$args = func_get_args();
 	$feed_codes = array();
 	if (!isset($args[0]) || !is_array($args[0])) {
@@ -89,10 +91,33 @@ function ue1_get_events() {
 			# but it's better than mangling it.
 			array_push($saved_events, $e);
 		}
+		### DEBUG
+		# We check for recurrence after an in process event because the
+		# recurrence check changes the start_time and end_time which
+		# would make it like any event that recures in the future is
+		# still in progress.
+		if ( $e->recurs ) {
+			echo "<!--\n";
+			$r_next = $e->next_recurrence();
+			echo "Event: ".$e->summary."\n";
+			echo "Start: ".date("Ymd", $e->start_time)."\n";
+			echo "Until: ".date("Ymd", $e->r_until)."\n";
+			echo "Freq:  ".$e->r_freq."\n";
+			echo "Int:   ".$e->r_interval."\n";
+			echo "Month: ".$e->r_bymonth."\n";
+			echo "Day:   ".$e->r_byday."\n";
+			echo "Debug: ".$next."\n";
+			echo "-->\n";
+			if ( isset($r_next) ) {
+				# We found a next recurrence. Save this in a
+				# seperate array that will be merged back in
+				array_push($saved_events, $e);
+			}
+		}
 	}	
 	$events = array_merge($saved_events, $events);
-	# We could have messed up the sorting if a multi-day event is still
-	# in progress... So resort the events.
+	# We probably messed up the sort order between events still inprogress
+	# and recurring events. So resort it.
 	usort($events, "sort_event_date");
 
 	switch (strtolower($type)) {
@@ -179,6 +204,33 @@ function ue1_get_events() {
 		if ( $e->desc ) {
 			$popup .= '<div class="ue1-popup-desc">';
 			$popup .= htmlentities($e->desc);
+			$popup .= '</div>';
+		}
+		if ( $e->recurs ) {
+			# This needs to be much more complicated once r_byday
+			# support is figured out
+			$popup .= '<div class="ue1-popup-recur">';
+			$popup .= '<div class="ue1-popup-recur-every">';
+			$popup .= 'Recurs every';
+			if ( $e->r_interval > 1 ) {
+				$popup .= " " . $e->r_freq;
+			}
+			switch ($e->r_freq) {
+			case "yearly":
+				$popup .= " year";
+				break;
+			}
+			if ($e->r_interval > 1) {
+				$popup .= "s";
+			}
+			$popup .= '</div>';
+			$r_next = $e->next_recurrence($e->start_time);
+			if ( isset($r_next) ) {
+				$popup .= '<div class="ue1-popup-recur-next">';
+				$popup .= 'Next recurrence: ';
+				$popup .= date("j-M-Y", $e->start_time);
+				$popup .= '</div>';
+			}
 			$popup .= '</div>';
 		}
 		$popup .= '</div>';
@@ -293,5 +345,10 @@ var popup = new Array();
 		echo '<ul style="list-style-type:none;list-style-image:none;"><li><small>Powered by ';
 		echo "<a href='$ue1_url'>Upcoming Events v$ue1_version</a></small></li></ul>\n";
 	}
+
+	$exec_end = microtime_float();
+	$exec_time = round($exec_end - $exec_start, 3);
+	echo "<!-- Upcoming Event Sidebar v$ue1_version - $ue1_url -->\n";
+	echo "<!-- Generated in $exec_time seconds -->\n";
 }
 

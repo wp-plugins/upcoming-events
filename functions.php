@@ -70,4 +70,8 @@ function sort_event_date($a, $b) {
 	return ($a->start_time < $b->start_time) ? -1 : 1;
 }
 
-
+function microtime_float() {
+	list ($msec, $sec) = explode(" ", microtime());
+	return ((float)$sec + (float)$msec);
+}
+?>

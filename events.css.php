@@ -44,3 +44,17 @@
 .ue1-popup-desc {
 	margin-top: 4px;
 }
+
+.ue1-popup-recur {
+	margin-top: 4px;
+}
+
+.ue1-popup-recur-every {
+	margin: 0px;
+	padding: 0px;
+}
+
+.ue1-popup-recur-next {
+	margin: 0px;
+	padding: 0px;
+}
