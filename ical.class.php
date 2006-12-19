@@ -49,6 +49,7 @@ class ical {
 
 	function parse_vcal() {
 		while($line = array_shift($this->lines)) {
+			if (! strpos($line, ":") ) { continue; }
 			list($p, $v) = explode(":", rtrim($line));
 			switch ( strtolower($p) ) {
 			case "prodid":
