@@ -2,6 +2,14 @@
 
 Tags: calendar, events, ical, feed
 Contributors: StarDestroyer
+Requires at least: 2.0
+Tested up to: 2.1.2
+Stable tag: 0.3
+
+This plugin can receive iCalendar feeds from third party sites and display
+aggregated upcoming events from multiple feeds in your sidebar.
+
+== Description ==
 
 Upcoming Events is a plugin that can receive iCalendar feeds from third party
 sites and display aggregated upcoming events from multiple feeds. As of this
@@ -24,11 +32,11 @@ the Plugins page in the WordPress Admin Interface to active the plugin.
 Configuration options will then be available from the "Upcoming Events" page
 of the "Options" tab.
 
-=== Release Notes ===
+== Release Notes ==
 
 For a full revision log, see http://dev.wp-plugins.org/log/upcoming-events
 
-== v0.3 - 6-Dec-2006 ==
+= v0.3 - 6-Dec-2006 =
 
 * Removed a debugging statement that caused days/weeks to display incorrectly
 * Individual iCal feeds can be immediately updated from the admin page
@@ -38,12 +46,12 @@ For a full revision log, see http://dev.wp-plugins.org/log/upcoming-events
 * More information is provided in a tooltip-like popup for each event
 * Basic error checking is done when making changes on the admin page
 
-== v0.2 - 29-Nov-2006 ==
+= v0.2 - 29-Nov-2006 =
 
 * Now runs on PHP 4 (used to have PHP 5 specific code)
 * Can now be loaded as a sidebar widget
 
-== v0.1 - 22-Nov-2006 ==
+= v0.1 - 22-Nov-2006 =
 
 * Initial release
 
