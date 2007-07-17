@@ -159,38 +159,38 @@ function ue1_get_events() {
 		echo "   <li id='ue1-$i' onmouseover='ue1_show($i)' onmouseout='ue1_hide($i)'>$ts" . htmlentities($e->summary) . "</li>\n";
 		$popup = '<div id="ue1-popup-'.$i.'" class="ue1-popup">';
 		if ( $e->same_day ) {
-			$popup .= '<h3 class="ue1-popup-date">';
+			$popup .= '<div class="ue1-popup-date">';
 			$popup .= date("F j, Y", $e->start_time);
-			$popup .= '</h3>';
+			$popup .= '</div>';
 			if (! $e->all_day) {
-				$popup .= '<h4 class="ue1-popup-time">';
+				$popup .= '<div class="ue1-popup-time">';
 				$popup .= date("g:i", $e->start_time);
 				$popup .= " - ";
 				$popup .= date("g:i", $e->end_time);
-				$popup .= '</h4>';
+				$popup .= '</div>';
 			}
 		} else {
 			if ( date("n", $e->start_time) == date("n", $e->end_time) ) {
 				# At least it's all in the same month!
-				$popup .= '<h3 class="ue1-popup-date">';
+				$popup .= '<div class="ue1-popup-date">';
 				$popup .= date("F j", $e->start_time);
 				$popup .= " - ";
 				$popup .= date("j, Y", strtotime($e->end_date));
-				$popup .= '</h3>';
+				$popup .= '</div>';
 			} elseif ( date("Y", $e->start_time) == date("Y", $e->end_time) ) {
 				# Well, the same year is good, right?
-				$popup .= '<h3 class="ue1-popup-date">';
+				$popup .= '<div class="ue1-popup-date">';
 				$popup .= date("M j", $e->start_time);
 				$popup .= " - ";
 				$popup .= date("M j, Y", strtotime($e->end_date));
-				$popup .= '</h3>';
+				$popup .= '</div>';
 			} else {
 				# Not the same month or year...
-				$popup .= '<h3 class="ue1-popup-date">';
+				$popup .= '<div class="ue1-popup-date">';
 				$popup .= date("M j, Y", $e->start_time);
 				$popup .= " - ";
 				$popup .= date("M j, Y", strtotime($e->end_date));
-				$popup .= '</h3>';
+				$popup .= '</div>';
 			}
 		}
 		$popup .= '<div class="ue1-popup-summary">';
@@ -342,7 +342,7 @@ var popup = new Array();
 
 <?php
 	if ( get_option("ue1_show_powered") ) {
-		echo '<ul style="list-style-type:none;list-style-image:none;"><li><small>Powered by ';
+		echo '<ul style="list-style-type:none;list-style-image:none;backgound:none;"><li style="background:none;"><small>Powered by ';
 		echo "<a href='$ue1_url'>Upcoming Events v$ue1_version</a></small></li></ul>\n";
 	}
 
