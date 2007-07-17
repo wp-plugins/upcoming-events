@@ -91,23 +91,12 @@ function ue1_get_events() {
 			# but it's better than mangling it.
 			array_push($saved_events, $e);
 		}
-		### DEBUG
 		# We check for recurrence after an in process event because the
 		# recurrence check changes the start_time and end_time which
 		# would make it like any event that recures in the future is
 		# still in progress.
 		if ( $e->recurs ) {
-			echo "<!--\n";
 			$r_next = $e->next_recurrence();
-			echo "Event: ".$e->summary."\n";
-			echo "Start: ".date("Ymd", $e->start_time)."\n";
-			echo "Until: ".date("Ymd", $e->r_until)."\n";
-			echo "Freq:  ".$e->r_freq."\n";
-			echo "Int:   ".$e->r_interval."\n";
-			echo "Month: ".$e->r_bymonth."\n";
-			echo "Day:   ".$e->r_byday."\n";
-			echo "Debug: ".$next."\n";
-			echo "-->\n";
 			if ( isset($r_next) ) {
 				# We found a next recurrence. Save this in a
 				# seperate array that will be merged back in
