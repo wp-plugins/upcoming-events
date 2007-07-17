@@ -275,6 +275,7 @@ if ( isset($validation_errors['bad_url_'.$c]) ) {
   <th width="33%" scope="row">Show This Feed:</th>
   <td>
 <?php $checked = ($feed["show"]) ? 'checked="checked"' : ''; ?>
+<?php if (empty($feed["code_name"])) { $checked = 'checked="checked"'; } ?>
     <input name="ue1_feed<?php echo $c; ?>_show" id="ue1_feed<?php echo $c; ?>_show" type="checkbox" value="1" <?php echo $checked; ?>/> <label for="ue1_feed<?php echo $c; ?>_show">Display in default sidebar</label>
   </td>
 </tr>
