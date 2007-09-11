@@ -3,8 +3,8 @@
 Tags: calendar, events, ical, feed
 Contributors: StarDestroyer
 Requires at least: 2.0
-Tested up to: 2.1.2
-Stable tag: 0.3
+Tested up to: 2.2.2
+Stable tag: 0.4
 
 This plugin can receive iCalendar feeds from third party sites and display
 aggregated upcoming events from multiple feeds in your sidebar.
@@ -35,6 +35,13 @@ of the "Options" tab.
 == Release Notes ==
 
 For a full revision log, see http://dev.wp-plugins.org/log/upcoming-events
+
+= v0.4 - 11-Sep-2007 =
+
+* Use $wpdb->prefix for forward compatibility with Wordpress
+* Provide limited support for recurring events
+* Specify that the background should be White in the CSS file
+* Display newly added feeds by default
 
 = v0.3 - 6-Dec-2006 =
 
