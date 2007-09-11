@@ -18,9 +18,9 @@
 
 
 function ue1_install() {
-	global $table_prefix, $wpdb;
+	global $wpdb;
 
-	$table_name = $table_prefix . "ue1_cache";
+	$table_name = $wpdb->prefix . "ue1_cache";
 
 	if ( $wpdb->get_var("show tables like '$table_name'") != $table_name ) {
 		require_once(ABSPATH . "wp-admin/upgrade-functions.php");
@@ -53,48 +53,90 @@ function ue1_options() {
 	}
 }
 
-function ue1_options_subpanel() {
-	global $table_prefix, $wpdb;
+function ue1_widget($args) {
+	extract($args);
+	echo $before_widget;
+	echo $before_title . 'Upcoming Events' . $after_title;
+	ue1_get_events();
+	echo $after_widget;
+}
 
-	$feeds = array();
+function ue1_update_options(&$feeds) {
+	global $wpdb;
+
 	$validation_errors = array();
+	$error_display = array();
 
-	if ( isset($_POST['ue1_update']) || isset($_POST['ue1_add_feed']) ) {
+	$c = 0;
+	$seen_codes = array();
+	while(1) {
+		$c++;
+		$f = 'ue1_feed'.$c;
+		if ( isset($_POST[$f.'_update_freq']) ) {
+			$code_name = $_POST[$f.'_code_name'];
+			if (! preg_match("/^[A-Za-z0-9_-]+$/", $code_name) ) {
+				$validation_errors['bad_code_'.$c] = 1;
+				array_push($error_display, "Code <tt>" . htmlentities($code_name) . "</tt> contains invalid characters. Valid characters are letters, numbers, underscore (_) and dash (-).");
+			}
+			if ( isset($seen_codes[$code_name]) ) {
+				$validation_errors['dup_code_'.$code_name] = 1;
+				array_push($error_display, "Duplicate code: <tt>" . htmlentities($code_name) . "</tt>");
+			}
+			$seen_codes[$code_name] = 1;
+			if (! preg_match("@^(?:/|http://)@", $_POST[$f.'_url']) ) {
+				$validation_errors['bad_url_'.$c] = 1;
+				array_push($error_display, "The path for the <tt>" . htmlentities($_POST[$f.'_display']) . "</tt> feed is invalid. A path for a local file should start with <tt>/</tt> and for a web ical feed it should start with <tt>http://</tt>");
+			}
+			array_push($feeds, array(
+				"display" => $_POST[$f.'_display'],
+				"code_name" => $_POST[$f.'_code_name'],
+				"url" => $_POST[$f.'_url'],
+				"update_freq" => $_POST[$f.'_update_freq'],
+				"show" => isset($_POST[$f.'_show']) ? true : false));
+			$t = $wpdb->prefix . "ue1_cache";
+			$wpdb->query("INSERT IGNORE $t (code_name)
+				VALUES ('" . $wpdb->escape($_POST[$f.'_code_name']) . "')");
+		} else {
+			break;
+		}
+	}
+	if (empty($validation_errors)) {
 		$show = (isset($_POST['ue1_show_powered'])) ? true : false;
 		update_option("ue1_show_powered", $show);
 		update_option("ue1_update_freq", $_POST['ue1_update_freq']);
 		update_option("ue1_show_num", $_POST['ue1_show_num']);
 		update_option("ue1_show_type", $_POST['ue1_show_type']);
-		$c = 0;
-		while(1) {
-			$c++;
-			$f = 'ue1_feed'.$c;
-			if ( isset($_POST[$f.'_url']) ) {
-				array_push($feeds, array(
-					"display" => $_POST[$f.'_display'],
-					"code_name" => $_POST[$f.'_code_name'],
-					"url" => $_POST[$f.'_url'],
-					"update_freq" => $_POST[$f.'_update_freq'],
-					"show" => isset($_POST[$f.'_show']) ? true : false));
-				$t = $table_prefix . "ue1_cache";
-				$wpdb->query("INSERT IGNORE $t (code_name)
-					VALUES ('" . $wpdb->escape($_POST[$f.'_code_name']) . "')");
-			} else {
-				break;
-			}
-		}
 		update_option("ue1_feeds", $feeds);
-	?>
-<div class="updated">Upcoming Events Options have been updated. If you changed a feed URL, please click the button to "Update all feeds now"</div>
-	<?php
+		echo "<div class='updated'>Upcoming Events Options have been updated.</div>\n";
+	} else {
+		echo "<div class='error'>Options not updated. Please correct the following errors\n";
+		echo "<ul>\n";
+		foreach ($error_display as $err) {
+			echo "  <li>$err</li>\n";
+		}
+		echo "</ul>\n";
+		echo "</div>\n";
+	}
+	return $validation_errors;
+}
+
+function ue1_options_subpanel() {
+	global $wpdb;
+
+	$feeds = array();
+	$validation_errors = array();
+
+	if ( isset($_POST['ue1_update']) || isset($_POST['ue1_add_feed']) ) {
+		$validation_errors = ue1_update_options($feeds);
 	}
 
 	if ( isset($_POST['ue1_add_feed']) ) {
-		array_push($feeds, array("display"=>"New Feed"));
+		array_push($feeds, array("update_freq"=>"Default"));
 		echo '<div class="updated">Options have been added for an <a href="#feed' . count($feeds) . '">additional feed below</a></div>';
 	}
 
 	if ( isset($_POST['ue1_man_refresh']) ) {
+		$validation_errors = ue1_update_options($feeds);
 		$feeds = get_option("ue1_feeds");
 		foreach ($feeds as $feed) {
 			ue1_update_ics($feed["code_name"]);
@@ -103,9 +145,24 @@ function ue1_options_subpanel() {
 <div class="updated">The cached feeds have been updated</div>
 	<?php
 	}
+	$c = 0;
+	while (1) {
+		$c++;
+		$f = 'ue1_feed'.$c;
+		if ( empty($_POST[$f."_update_freq"]) ) {
+			# Update Freq is pretty much guarnteed to be set as
+			# it's a select box
+			break;
+		}
+		if ( isset($_POST[$f."_update"]) ) {
+			$validation_errors = ue1_update_options($feeds);
+			ue1_update_ics($_POST[$f."_code_name"]);
+			echo '<div class="updated">Feed "<tt>'.$_POST[$f."_code_name"].'</tt>" has been updated</div>';
+		}
+	}
 	?>
   <div class="wrap">
-  <form method="post">
+  <form method="post" action="options-general.php?page=ue1">
     <h2>Upcoming Events Options</h2>
     <table width="100%" cellspacing="2" cellpadding="5" class="editform"> 
 
@@ -115,6 +172,8 @@ function ue1_options_subpanel() {
          <?php $checked = (get_option("ue1_show_powered")) ? 'checked="checked"' : ''; ?>
          <input type="checkbox" name="ue1_show_powered" <?php echo $checked; ?> />
          <em>Uncheck this if you would rather not have the "Powered By" in the sidebar box. The author would appreciate it if this were left on, but understands people not wanting their UI cluttered</em>
+        </td>
+      </tr>
       <tr valign="top"> 
        <th width="33%" scope="row">Default Update Frequency:</th> 
        <td>
@@ -130,21 +189,21 @@ function ue1_options_subpanel() {
 <?php
 $def = get_option("ue1_show_num");
 for ($i = 1; $i < 20; $i++) {
-	$sel = ($i == $def) ? " selected" : "";
+	$sel = ($i == $def) ? ' selected="selected"' : "";
 	echo "<option$sel>$i</option>\n";
 }
 ?>
          </select> <select name="ue1_show_type">
-           <option<?php echo (get_option("ue1_show_type") == "Events") ? " selected" : ""; ?>>Events</option>
-           <option<?php echo (get_option("ue1_show_type") == "Days") ? " selected" : ""; ?>>Days</option>
-           <option<?php echo (get_option("ue1_show_type") == "Weeks") ? " selected" : ""; ?>>Weeks</option>
+           <option<?php echo (get_option("ue1_show_type") == "Events") ? ' selected="selected"' : ""; ?>>Events</option>
+           <option<?php echo (get_option("ue1_show_type") == "Days") ? ' selected="selected"' : ""; ?>>Days</option>
+           <option<?php echo (get_option("ue1_show_type") == "Weeks") ? ' selected="selected"' : ""; ?>>Weeks</option>
          </select>
        </td>
       </tr>
       <tr valign="top"> 
        <th width="33%" scope="row">Manual Refresh:</th> 
        <td>
-         <input type="submit" name="ue1_man_refresh" class="edit" value="Update all feeds now">
+         <input type="submit" name="ue1_man_refresh" class="edit" value="Update all feeds now" />
        </td>
       </tr>
     </table>
@@ -156,7 +215,7 @@ for ($i = 1; $i < 20; $i++) {
     <em>Dispaly Name, Code Name, and Path are required for each feed. Each feed must have a unique Code Name</em>
 
 <?php
-if ( ! isset($feeds[0]["url"]) ) {
+if ( ! isset($feeds[0]["update_freq"]) ) {
 	$feeds = get_option('ue1_feeds');
 }
 
@@ -171,23 +230,38 @@ foreach ($feeds as $feed) {
 <tr valign="top"> 
   <th width="33%" scope="row">Display Name:</th>
   <td>
-    <input type="text" name="ue1_feed<?php echo $c; ?>_display" size="60" value="<?php echo htmlentities($feed["display"]); ?>">
+    <input type="text" name="ue1_feed<?php echo $c; ?>_display" size="60" value="<?php echo htmlentities($feed["display"]); ?>" />
     <br /><em>The Display Name is used any time a reference to this iCal feed 
     must be displayed. This includes here in the admin panel.</em>
   </td>
 </tr>
-<tr valign="top"> 
+<?php
+$code_class = "";
+if ( isset($validation_errors['bad_code_'.$c]) ) {
+	$code_class = "error";
+}
+if ( isset($validation_errors['dup_code_'.$feed["code_name"]]) ) {
+	$code_class = "error";
+}
+?>
+<tr valign="top" class="<?php echo $code_class; ?>"> 
   <th width="33%" scope="row">Code Name:</th>
   <td>
-    <input type="text" name="ue1_feed<?php echo $c; ?>_code_name" size="60" value="<?php echo htmlentities($feed["code_name"]); ?>">
+    <input type="text" name="ue1_feed<?php echo $c; ?>_code_name" size="60" value="<?php echo htmlentities($feed["code_name"]); ?>" />
     <br /><em>The Code Name can be used to selectively display iCal feeds
     in seperate sidebar boxes.</em>
   </td>
 </tr>
-<tr valign="top"> 
+<?php
+$url_class = "";
+if ( isset($validation_errors['bad_url_'.$c]) ) {
+	$url_class = "error";
+}
+?>
+<tr valign="top" class="<?php echo $url_class; ?>"> 
   <th width="33%" scope="row">Path:</th>
   <td>
-    <input type="text" name="ue1_feed<?php echo $c; ?>_url" size="60" value="<?php echo htmlentities($feed["url"]); ?>">
+    <input type="text" name="ue1_feed<?php echo $c; ?>_url" size="60" value="<?php echo htmlentities($feed["url"]); ?>" />
     <br /><em>The path can either be a local ics file or a URL to a live ICS feed (such as Google Calendar or Apple's iCal)</em>
   </td>
 </tr>
@@ -201,9 +275,29 @@ foreach ($feeds as $feed) {
   <th width="33%" scope="row">Show This Feed:</th>
   <td>
 <?php $checked = ($feed["show"]) ? 'checked="checked"' : ''; ?>
+<?php if (empty($feed["code_name"])) { $checked = 'checked="checked"'; } ?>
     <input name="ue1_feed<?php echo $c; ?>_show" id="ue1_feed<?php echo $c; ?>_show" type="checkbox" value="1" <?php echo $checked; ?>/> <label for="ue1_feed<?php echo $c; ?>_show">Display in default sidebar</label>
   </td>
 </tr>
+<?php
+	if (! empty($feed["code_name"]) ) {
+?>
+<tr valign="top">
+  <th width="33%" scope="row">Feed Update:</th>
+  <td>
+    <input type="submit" name="ue1_feed<?php echo $c; ?>_update" value="Update Now" />
+    Last Updated:
+<?php
+        $table = $wpdb->prefix . "ue1_cache";
+        $sql = "SELECT last_update FROM $table WHERE code_name = '" . $wpdb->escape($feed["code_name"]) . "'";
+        $last_update = $wpdb->get_var($sql);
+	echo $last_update;
+?>
+  </td>
+</tr>
+<?php
+	}
+?>
 </table>
 <div class="submit">
   <input type="submit" name="ue1_update" value="Update Options &raquo;" />
@@ -221,36 +315,38 @@ foreach ($feeds as $feed) {
 
 <h3>Sample Sidebar Code</h3>
 
+<p>If you use the <a href="http://automattic.com/code/widgets/">WordPress Widget</a> plugin, you can add Upcoming Events to the sidebar using the Widget options on the Presentation tab. Currently this adds the same thing as the "Default settings" option below.</p>
+
 <h4>Use default settings</h4>
-<pre>
+<pre class="code">
 &lt;li&gt;
   &lt;h2&gt;Upcoming Events&lt;h2&gt;
-  &lt;?php ue1_get_events()?&gt;
+  &lt;?php ue1_get_events(); ?&gt;
 &lt;/li&gt;
 </pre>
 
 <h4>Display a feed with the Code Name of <tt>feed3</tt></h4>
-<pre>
+<pre class="code">
 &lt;li&gt;
   &lt;h2&gt;Upcoming Events&lt;h2&gt;
-  &lt;?php ue1_get_events(array("feed3"))?&gt;
+  &lt;?php ue1_get_events(array("feed3")); ?&gt;
 &lt;/li&gt;
 </pre>
 <em>Note: This will ignore the "Show This Feed" option</em>
 
 <h4>Display 5 aggregated events from <tt>feed2</tt> and <tt>feed3</tt></h4>
-<pre>
+<pre class="code">
 &lt;li&gt;
   &lt;h2&gt;Upcoming Events&lt;h2&gt;
-  &lt;?php ue1_get_events(array("feed2", "feed3"), 5, "Events")?&gt;
+  &lt;?php ue1_get_events(array("feed2", "feed3"), 5, "Events"); ?&gt;
 &lt;/li&gt;
 </pre>
 
 <h4>Dispaly 6 weeks worth of events from default feeds</h4>
-<pre>
+<pre class="code">
 &lt;li&gt;
   &lt;h2&gt;Upcoming Events&lt;h2&gt;
-  &lt;?php ue1_get_events(null, 6, "Weeks")?&gt;
+  &lt;?php ue1_get_events(null, 6, "Weeks"); ?&gt;
 &lt;/li&gt;
 </pre>
 <em>Note: This will use the "Show This Feed" option to determine which feeds to aggregate</em>
@@ -292,12 +388,19 @@ function ue1_echo_update_freq_select($name, $def) {
 		array_unshift($options, "Default");
 	}
 	foreach ($options as $option) {
-		$sel = ($option == $def) ? " selected" : "";
+		$sel = ($option == $def) ? ' selected="selected"' : "";
 		echo "  <option$sel>$option</option>\n";
 	}
 	echo "</select>\n";
 }
 
+function ue1_widget_init() {
+	if ( function_exists('register_sidebar_widget') ) {
+		register_sidebar_widget('Upcoming Events', 'ue1_widget');
+	}
+}
+
 add_action('admin_menu', 'ue1_options');
-add_action('activate_upcomingevents/upcomingevents.php', 'ue1_install');
+add_action('activate_upcoming-events/upcoming-events.php', 'ue1_install');
+add_action('widgets_init', 'ue1_widget_init');
 

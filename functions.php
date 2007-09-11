@@ -18,11 +18,11 @@
 
 
 function ue1_retreive_ics($feed_codes) {
-	global $table_prefix, $wpdb;
+	global $wpdb;
 	$feeds = get_option("ue1_feeds");
 	$ret = array();
 
-	$table = $table_prefix . "ue1_cache";
+	$table = $wpdb->prefix . "ue1_cache";
 	$sql = "SELECT code_name, last_update, ics_data FROM $table WHERE ";
 	$arr_where = array();
 	foreach ($feed_codes as $f) {
@@ -47,8 +47,8 @@ function ue1_retreive_ics($feed_codes) {
 }
 
 function ue1_update_ics($feed_code) {
-	global $table_prefix, $wpdb;
-	$table = $table_prefix . "ue1_cache";
+	global $wpdb;
+	$table = $wpdb->prefix . "ue1_cache";
 	$feeds = get_option("ue1_feeds");
 
 	foreach ($feeds as $feed) {
@@ -70,4 +70,8 @@ function sort_event_date($a, $b) {
 	return ($a->start_time < $b->start_time) ? -1 : 1;
 }
 
-
+function microtime_float() {
+	list ($msec, $sec) = explode(" ", microtime());
+	return ((float)$sec + (float)$msec);
+}
+?>

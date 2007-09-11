@@ -1,0 +1,30 @@
+#!/usr/bin/php
+<?php
+require_once("ical.class.php");
+
+if (count($argv) != 2 ) {
+	display_usage();
+	exit;
+}
+if (! file_exists($argv[1]) ) {
+	display_usage();
+	echo "\n";
+	echo "$argv[1] is not a file\n";
+	exit;
+}
+
+$ics = file_get_contents($argv[1]);
+
+$ical = new ical;
+$ical->parse_ics($ics);
+foreach ($ical->events as $e) {
+    echo date("Y-m-d g:i", $e->start_time) . " " . $e->summary . "\n";
+}
+
+
+function display_usage() {
+	echo "Usage:\n";
+	echo "  ./listevents <eventfile.ics>\n";
+} 
+
+?>
