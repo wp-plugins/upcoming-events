@@ -6,8 +6,7 @@ Requires at least: 2.0
 Tested up to: 2.2.2
 Stable tag: 0.4
 
-This plugin can receive iCalendar feeds from third party sites and display
-aggregated upcoming events from multiple feeds in your sidebar.
+This plugin can receive iCalendar feeds from third party sites and display aggregated upcoming events from multiple feeds in your sidebar.
 
 == Description ==
 
