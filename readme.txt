@@ -13,10 +13,10 @@ This plugin can receive iCalendar feeds from third party sites and display aggre
 Upcoming Events is a plugin that can receive iCalendar feeds from third party
 sites and display aggregated upcoming events from multiple feeds. As of this
 time, it has received very little testing, but it is working on the author's
-site using two feeds from Google and one from ical.mac.com. This first
-release version provides the ability to add a virtually unlimited number of
-feeds, but does not contain the ability to delete any (feeds can be hidden
-so they don't show up in the sidebar).
+site using two feeds from Google, one from Yahoo, and one from ical.mac.com.
+This first release version provides the ability to add a virtually unlimited
+number of feeds, but does not contain the ability to delete any (feeds can be
+hidden so they don't show up in the sidebar).
 
 ICS files are locally cached and will be automatically updated when they reach
 a certain age. This age is configurable both as a global default and
