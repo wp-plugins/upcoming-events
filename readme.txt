@@ -1,7 +1,7 @@
 ==== Upcoming Events ====
 
 Tags: calendar, events, ical, feed
-Contributors: StarDestroyer
+Contributors: StarDestroyer, sjashe
 Requires at least: 2.0
 Tested up to: 2.2.2
 Stable tag: 0.4

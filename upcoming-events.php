@@ -115,7 +115,7 @@ function ue1_get_events() {
 		break;
 	case "days":
 	case "weeks":
-		for ($i = 0; $i < count($events) - 1; $i++) {
+		for ($i = 0; $i < count($events); $i++) {
 			if( strtotime("$num $type") < $events[$i]->start_time ) {
 				break;
 			}
@@ -124,10 +124,10 @@ function ue1_get_events() {
 		break;
 	}
 
-	$popup_html = array("empty");
+	static $popup_html = array("empty");
 	$prev_date = "";
 	echo "<ul>\n <li style='display:none;'>\n  <ul>\n   <li> </li>\n";
-	$i = 1;
+	static $i = 1;
 	foreach ($events as $e) {
 		if ( $prev_date != $e->start_date ) {
 			$prev_date = $e->start_date;
@@ -224,6 +224,7 @@ function ue1_get_events() {
 		}
 		$popup .= '</div>';
 		$popup = preg_replace("/\n/", "<br />", $popup);
+		$popup = strip_newlines($popup);
 		array_push($popup_html, $popup);
 		$i++;
 	}

@@ -52,15 +52,17 @@ function ue1_update_ics($feed_code) {
 	$feeds = get_option("ue1_feeds");
 
 	foreach ($feeds as $feed) {
-		if ( $feed_code == $feed["code_name"] ) {
-			$ics = file_get_contents($feed["url"]);
-			$wpdb->query("UPDATE $table SET
+	    /* Only Update if feed returns value, else leave old data */
+		if ( $feed_code == $feed["code_name"] &&
+			 $ics = file_get_contents($feed["url"])) {
+			    $wpdb->query("UPDATE $table SET
 					last_update = now(),
 					ics_data = '" . $wpdb->escape($ics) . "'
 					WHERE code_name = '" . $wpdb->escape($feed_code) . "'");
 			return $ics;
 		}
 	}
+	return false;
 }
 
 function sort_event_date($a, $b) {
@@ -73,5 +75,10 @@ function sort_event_date($a, $b) {
 function microtime_float() {
 	list ($msec, $sec) = explode(" ", microtime());
 	return ((float)$sec + (float)$msec);
+}
+
+/* need to strip out cr/lf from some fields */
+function strip_newlines($str) {
+	return str_replace(array("\r\n","\r","\n") , ' ' , $temp);
 }
 ?>
