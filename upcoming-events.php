@@ -60,6 +60,11 @@ function ue1_get_events() {
 	}
 	$num = (!empty($args[1])) ? $args[1] : get_option("ue1_show_num");
 	$type = (!empty($args[2])) ? $args[2] : get_option("ue1_show_type");
+
+	if (empty($feed_codes)) {
+		echo "Error: No feeds selected for this block\n";
+		return;
+	}
 	
 	$ics = ue1_retreive_ics($feed_codes);
 

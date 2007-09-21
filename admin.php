@@ -449,7 +449,7 @@ function ue1_widget_control($number) {
 		if ($custom && $options[$number]['cals'][$feed['code_name']]) $checked = " checked='checked'";
 		if (!$custom && $feed['show'] == 1) $checked = " checked='checked'";
 		if (!$custom) $disabled = " disabled='disabled'";
-		echo "<input type='checkbox' id='$name' name='$name'$checked$disabled /> ".$feed['display']."<br />\n";
+		echo "<input type='checkbox' id='$name' name='$name'$checked$disabled /> <label for='$name'>".$feed['display']."</label><br />\n";
 	}
 	echo "</div>\n";
 	echo "<div>\n";
