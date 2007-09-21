@@ -79,6 +79,6 @@ function microtime_float() {
 
 /* need to strip out cr/lf from some fields */
 function strip_newlines($str) {
-	return str_replace(array("\r\n","\r","\n") , ' ' , $temp);
+	return str_replace(array("\r\n","\r","\n") , ' ' , $str);
 }
 ?>

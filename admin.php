@@ -39,6 +39,7 @@ function ue1_install() {
 	add_option("ue1_show_num", "10", "Number of (Days|Events) to show");
 	add_option("ue1_show_type", "Events", "What ue1_show_num refers to");
 	add_option("ue1_feeds", array( array("url"=>"")));
+	add_option("ue1_widget", array("number" => 1));
 
 }
 
@@ -53,11 +54,21 @@ function ue1_options() {
 	}
 }
 
-function ue1_widget($args) {
+function ue1_widget($args, $number = 1) {
 	extract($args);
+	$options = get_option('ue1_widget');
+	$title = $options[$number]['title'];
+	if (empty($title)) $title = "Upcoming Events";
+	$feeds = null;
+	if ($options[$number]['cal'] == 'custom') {
+		$feeds = array();
+		foreach ($options[$number]['cals'] as $feed => $i) {
+			array_push($feeds, $feed);
+		}
+	}
 	echo $before_widget;
-	echo $before_title . 'Upcoming Events' . $after_title;
-	ue1_get_events();
+	echo $before_title . $title . $after_title;
+	ue1_get_events($feeds, $options[$number]['show_num'], $options[$number]['show_type'], $number);
 	echo $after_widget;
 }
 
@@ -315,7 +326,7 @@ if ( isset($validation_errors['bad_url_'.$c]) ) {
 
 <h3>Sample Sidebar Code</h3>
 
-<p>If you use the <a href="http://automattic.com/code/widgets/">WordPress Widget</a> plugin, you can add Upcoming Events to the sidebar using the Widget options on the Presentation tab. Currently this adds the same thing as the "Default settings" option below.</p>
+<p>If your theme supports <a href="http://automattic.com/code/widgets/">widgets</a>, you can add Upcoming Events to the sidebar using the Widget options on the Presentation tab. Multiple event widgets can be added with different options for each widget. Othwise, you can use the code samples below.</p>
 
 <h4>Use default settings</h4>
 <pre class="code">
@@ -394,10 +405,134 @@ function ue1_echo_update_freq_select($name, $def) {
 	echo "</select>\n";
 }
 
-function ue1_widget_init() {
-	if ( function_exists('register_sidebar_widget') ) {
-		register_sidebar_widget('Upcoming Events', 'ue1_widget');
+function ue1_widget_control($number) {
+	$options = $newoptions = get_option("ue1_widget");
+	$feeds = get_option('ue1_feeds');
+	if ( $_POST["ue1-submit-$number"] ) {
+		$newoptions[$number]['title'] = trim(strip_tags(stripslashes($_POST["ue1-title-$number"])));
+		$newoptions[$number]['cal'] = $_POST["ue1-cal-$number"];
+		unset($newoptions[$number]['cals']);
+		if ( $_POST["ue1-cal-$number"] == 'custom' ) {
+			$newoptions[$number]['cals'] = array();
+			foreach ($feeds as $feed) {
+				if ( $_POST["ue1-$number-".$feed['code_name']] ) {
+					$newoptions[$number]['cals'][$feed['code_name']] = 1;
+				}
+			}
+		}
+		$newoptions[$number]['show_num'] = $_POST["ue1-show-num-$number"];
+		$newoptions[$number]['show_type'] = $_POST["ue1-show-type-$number"];
 	}
+	if ( $options != $newoptions ) {
+		$options = $newoptions;
+		update_option('ue1_widget', $options);
+	}
+	$title = $options[$number]['title'];
+	if ( $title == "") $title = "Upcoming Events";
+	echo "<div>\n";
+	echo " Title: <input style='width: 350px' id='ue1-title-$number' name='ue1-title-$number' value='".htmlentities($title)."'>\n";
+	echo "</div>\n";
+	$custom = ($options[$number]['cal'] == 'custom') ? true : false;
+	echo "Calendars: <select name='ue1-cal-$number' id='ue1-cal-$number' onchange='ue1_cal_change_$number(this)'>\n";
+	echo "  <option value='default'".($custom ? "" : " selected").">Default</option>\n";
+	echo "  <option value='custom'".($custom ? " selected" : "").">Custom</option>\n";
+	echo "</select>\n";
+	echo "<div id='ue1-cals-list-$number' style='padding-left: 40px'>\n";
+	echo "<div id='ue1-cals-note-$number' style='display: none'>\n";
+	echo "  NOTE: After saving with the default calendars option, the\n";
+	echo "  checkboxes below will be reset to the defaults.\n";
+	echo "</div>\n";
+	foreach ($feeds as $feed) {
+		$checked = "";
+		$disabled = "";
+		$name = "ue1-$number-".$feed['code_name'];
+		if ($custom && $options[$number]['cals'][$feed['code_name']]) $checked = " checked='checked'";
+		if (!$custom && $feed['show'] == 1) $checked = " checked='checked'";
+		if (!$custom) $disabled = " disabled='disabled'";
+		echo "<input type='checkbox' id='$name' name='$name'$checked$disabled /> ".$feed['display']."<br />\n";
+	}
+	echo "</div>\n";
+	echo "<div>\n";
+	echo "Show <select name='ue1-show-num-$number' id='ue1-show-num-$number'>\n";
+	echo " <option value=''>&lt;Default&gt;</option>\n";
+	for ($i = 1; $i < 20; $i++) {
+		$sel = ($i == $options[$number]['show_num']) ? " selected='selected'" : "";
+		echo " <option value='$i'$sel>$i</option>\n";
+	}
+	echo "</select>\n";
+	echo "<select name='ue1-show-type-$number' id='ue1-show-type-$number'>\n";
+	echo " <option value=''>&lt;Default&gt;</option>\n";
+	echo " <option value='Events'".(($options[$number]['show_type'] == 'Events') ? " selected='selected'" : "").">Events</option>\n";
+	echo " <option value='Days'".(($options[$number]['show_type'] == 'Days') ? " selected='selected'" : "").">Days</option>\n";
+	echo " <option value='Weeks'".(($options[$number]['show_type'] == 'Weeks') ? " selected='selected'" : "").">Weeks</option>\n";
+	echo "</select>\n";
+	echo "<input type='hidden' id='ue1-submit-$number' name='ue1-submit-$number' value='1'>\n";
+	echo "</div>\n";
+	echo "<script type='text/javascript'>\n";
+	echo "function ue1_cal_change_$number(e) {\n";
+	echo "    var dis = (e.value == 'custom') ? '' : 'disabled';\n";
+	echo "    var cals = document.getElementById('ue1-cals-list-$number');\n";
+	echo "    var inputs = cals.getElementsByTagName('input');\n";
+	echo "    for (var i=0;i<inputs.length;i++) {\n";
+	echo "        inputs[i].disabled = dis;\n";
+	echo "    }\n";
+	echo "    if (dis) {  // Non-empty means default\n";
+	echo "        document.getElementById('ue1-cals-note-$number').style.display = '';\n";
+	echo "    }\n";
+	echo "}\n";
+	echo "</script>\n";
+}
+
+function ue1_sidebar_admin() {
+	$options = get_option('ue1_widget');
+	?>
+<div class="wrap">
+	<form method="POST">
+		<h2>Upcoming Events Widgets</h2>
+		<p style="line-height: 30px;">How many Upcoming Events widgets would you like?
+		<select id="ue1-number" name="ue1-number">
+	<?php
+		for ($i = 1; $i <= 9; $i++) {
+			$sel = ($i == $options['number']) ? ' selected' : '';
+			echo "<option value='$i'$sel>$i</option>\n";
+		}
+	?>
+		</select>
+		<span class="submit"><input type="submit" name="ue1-number-submit" id="ue1-number-submit" value="Save" /></span></p>
+	</form>
+</div>
+	<?php
+}
+
+function ue1_sidebar_setup() {
+	$options = $newoptions = get_option("ue1_widget");
+	if ( isset($_POST['ue1-number-submit']) ) {
+		$number = (int) $_POST['ue1-number'];
+		if ( $number < 1 ) $number = 1;
+		if ( $number > 9 ) $number = 9;
+		$newoptions['number'] = $number;
+	}
+	if ( $options != $newoptions ) {
+		$options = $newoptions;
+		update_option('ue1_widget', $options);
+		ue1_widget_init();
+	}
+}
+
+function ue1_widget_init() {
+	$options = get_option('ue1_widget');
+	$feeds = get_option('ue1_feeds');
+	$number = $options['number'];
+	if ( $number < 1 ) $number = 1;
+	if ( $number > 9 ) $number = 9;
+	for ($i=1; $i <= 9; $i++) {
+		$name = (array('Upcoming Events %s', 'widgets', $i));
+		$height = 120 + count($feeds) * 20;
+		register_sidebar_widget($name, $i <= $number ? 'ue1_widget' : /* unregister */ '', $i);
+		register_widget_control($name, $i <= $number ? 'ue1_widget_control' : /* unregister */ '', 400, $height, $i);
+	}
+	add_action('sidebar_admin_page', 'ue1_sidebar_admin');  /* How many? */
+	add_action('sidebar_admin_setup', 'ue1_sidebar_setup'); /* Submit ^^ */
 }
 
 add_action('admin_menu', 'ue1_options');

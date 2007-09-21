@@ -42,7 +42,7 @@ function ue1_css() {
 }
 
 function ue1_get_events() {
-	global $ue1_version, $ue1_url;
+	global $ue1_version, $ue1_url, $ue1_js_popup_start;
 	$feeds = get_option("ue1_feeds");
 
 	$exec_start = microtime_float();
@@ -58,8 +58,8 @@ function ue1_get_events() {
 	} else {
 		$feed_codes = $args[0];
 	}
-	$num = (isset($args[1])) ? $args[1] : get_option("ue1_show_num");
-	$type = (isset($args[2])) ? $args[2] : get_option("ue1_show_type");
+	$num = (!empty($args[1])) ? $args[1] : get_option("ue1_show_num");
+	$type = (!empty($args[2])) ? $args[2] : get_option("ue1_show_type");
 	
 	$ics = ue1_retreive_ics($feed_codes);
 
@@ -230,6 +230,9 @@ function ue1_get_events() {
 	}
 	echo "  </ul>\n </li>\n</ul>\n";
 
+	if (empty($ue1_js_popup_start)) {
+		// We haven't done any JS yet for UE1, so output these libraries
+		$ue1_js_popup_start = 1;
 ?>
 <script type="text/javascript">
 <!--
@@ -322,10 +325,16 @@ function ue1_popup_unhover() {
 }
 
 var popup = new Array();
+//-->
+</script>
 <?php
-	for ($i = 1; $i < count($popup_html); $i++) {
+	}
+	echo "<script type='text/javascript'>\n";
+	echo "<!--\n";
+	for ($i = $ue1_js_popup_start; $i < count($popup_html); $i++) {
 		echo "popup[$i] = '" . addslashes($popup_html[$i]) . "';\n";
 	}
+	$ue1_js_popup_start = $i;
 ?>
 //-->
 </script>
