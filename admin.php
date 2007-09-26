@@ -85,6 +85,10 @@ function ue1_update_options(&$feeds) {
 		$f = 'ue1_feed'.$c;
 		if ( isset($_POST[$f.'_update_freq']) ) {
 			$code_name = $_POST[$f.'_code_name'];
+			if ( preg_match("/^_/", $code_name) ) {
+				$validation_errors['underscore_code_'.$c] = 1;
+				array_push($error_display, "Code <tt>" . htmlentities($code_name) . "</tt> starts with an underscore (_). Code names starting with underscores are reserved for internal use.");
+			}
 			if (! preg_match("/^[A-Za-z0-9_-]+$/", $code_name) ) {
 				$validation_errors['bad_code_'.$c] = 1;
 				array_push($error_display, "Code <tt>" . htmlentities($code_name) . "</tt> contains invalid characters. Valid characters are letters, numbers, underscore (_) and dash (-).");
@@ -248,6 +252,9 @@ foreach ($feeds as $feed) {
 </tr>
 <?php
 $code_class = "";
+if ( isset($validation_errors['underscore_code_'.$c]) ) {
+	$code_class = "error";
+}
 if ( isset($validation_errors['bad_code_'.$c]) ) {
 	$code_class = "error";
 }
