@@ -296,7 +296,7 @@ function ue1_create(i) {
 	ue1_curr_popup.style.MozOpacity = 0;
 	ue1_curr_popup.style.filter = "alpha(opacity=0)";
 
-	ue1_event.appendChild(ue1_curr_popup);
+	ue1_event.parentNode.appendChild(ue1_curr_popup);
 
 	// Set up the fade....
 	for (var f = 1; f <= 100; f++) {
@@ -357,7 +357,7 @@ function ue1_destroy(i) {
 function ue1_remove_popup(i) {
 	ue1_event = document.getElementById("ue1-"+i);
 	if (ue1_curr_popup) {
-		ue1_event.removeChild(ue1_curr_popup);
+		ue1_curr_popup.parentNode.removeChild(ue1_curr_popup);
 	}
 	ue1_curr_popup = "";
 	ue1_curr_popup_i = 0;
