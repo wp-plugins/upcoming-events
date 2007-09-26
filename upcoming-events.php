@@ -246,6 +246,8 @@ var ue1_curr_popup_i = 0;
 var hovering_popup = false;
 var create_timer = "";
 var destroy_timer = "";
+var fade_timer = new Array();
+var fade_speed = 3; // How many miliseconds between each percentage of fade
 
 function ue1_show(i) {
 	if (! document.getElementById ) {
@@ -260,17 +262,19 @@ function ue1_show(i) {
 		}
 		return;
 	}
+	var create_delay = 500;
 	if (ue1_curr_popup) {
 		if (destroy_timer) {
 			clearTimeout(destroy_timer);
 		}
 		destroy_timer = setTimeout("ue1_destroy("+ue1_curr_popup_i+")", 500);
+		create_delay += 600;
 	}
 	if (create_timer) {
 		clearTimeout(create_timer);
 		create_timer = "";
 	}
-	create_timer = setTimeout("ue1_create("+i+")", 1000);
+	create_timer = setTimeout("ue1_create("+i+")", create_delay);
 }
 
 function ue1_create(i) {
@@ -283,11 +287,47 @@ function ue1_create(i) {
 	if (ue1_curr_popup.addEventListener) {
 		// Unfortunately, not everybody supports this method. If they
 		// don't, then the popup just disappears sooner
-		ue1_curr_popup.addEventListener("mouseover", ue1_popup_hover, false);
-		ue1_curr_popup.addEventListener("mouseout", ue1_popup_unhover, false);
+		ue1_add_event(ue1_curr_popup, "mouseover", ue1_popup_hover);
+		ue1_add_event(ue1_curr_popup, "mouseout", ue1_popup_unhover);
 	}
 
+	// Make this fully transpartent so we can fade in
+	ue1_curr_popup.style.opacity = 0;
+	ue1_curr_popup.style.MozOpacity = 0;
+	ue1_curr_popup.style.filter = "alpha(opacity=0)";
+
 	ue1_event.appendChild(ue1_curr_popup);
+
+	// Set up the fade....
+	for (var f = 1; f <= 100; f++) {
+		fade_timer[f] = setTimeout("ue1_fade("+f+", true)", (f * fade_speed));
+	}
+
+}
+
+function ue1_fade(f, fade_in) {
+	var o = ue1_curr_popup;
+	if (o) {
+		var opacity = fade_in ? f : (101 - f);
+		o.style.opacity = opacity  / 100;
+		o.style.MozOpacity = opacity / 100;
+		o.style.filter = "alpha(opacity="+opacity+")";
+		clearTimeout(fade_timer[f]);
+		fade_timer[f] = "";
+	} else {
+		ue1_stop_fade();
+	}
+}
+
+function ue1_stop_fade() {
+	for (var f = 100; f >= 1; f--) {
+		if (!fade_timer[f]) {
+			// We're done
+			return;
+		}
+		clearTimeout(fade_timer[f]);
+		fade_timer[f] = "";
+	}
 }
 
 function ue1_hide(i) {
@@ -306,8 +346,19 @@ function ue1_hide(i) {
 }
 
 function ue1_destroy(i) {
+	// Set up the fade....
+	ue1_stop_fade();
+	for (var f = 1; f <= 100; f++) {
+		fade_timer[f] = setTimeout("ue1_fade("+f+", false)", (f * fade_speed));
+	}
+	setTimeout("ue1_remove_popup("+i+")", (101 * fade_speed));
+}
+
+function ue1_remove_popup(i) {
 	ue1_event = document.getElementById("ue1-"+i);
-	ue1_event.removeChild(ue1_curr_popup);
+	if (ue1_curr_popup) {
+		ue1_event.removeChild(ue1_curr_popup);
+	}
 	ue1_curr_popup = "";
 	ue1_curr_popup_i = 0;
 	if (destroy_timer) {
@@ -327,6 +378,17 @@ function ue1_popup_hover() {
 
 function ue1_popup_unhover() {
 	hovering_popup = false;
+}
+
+function ue1_add_event(o, type, fn) {
+	if (o.addEventListener) {
+		o.addEventListener(type, fn, false);
+		return true;
+	} else if (o.attachEvent) {
+		return o.attachEvent("on"+type, fn);
+	} else {
+		return false;
+	}
 }
 
 var popup = new Array();

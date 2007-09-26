@@ -13,15 +13,11 @@
 	-moz-border-radius: 10pt;
 	padding: 4px;
 	color: black;
-	opacity: 0.65;
-}
-
-.ue1-popup:hover {
-	opacity: 1;
+	height: 100%;
 }
 
 .ue1-popup-date {
-	background-color: white;
+	background-color: transparent;
 	color: black;
 	font-size: 160%;
 	font-weight: bold;
@@ -32,49 +28,49 @@
 }
 
 .ue1-popup-time {
-	background-color: white;
+	background-color: transparent;
 	color: black;
 	font-weight: bold;
 	margin: 0px;
-	margin-top: -10px;
+	margin-top: -5px;
 	padding: 0px;
 	white-space: nowrap;
 }
 
 .ue1-popup-summary {
-	background-color: white;
+	background-color: transparent;
 	color: black;
 	margin-top: 4px;
 	white-space: nowrap;
 }
 
 .ue1-popup-location {
-	background-color: white;
+	background-color: transparent;
 	color: black;
 	white-space: nowrap;
 }
 
 .ue1-popup-desc {
-	background-color: white;
+	background-color: transparent;
 	color: black;
 	margin-top: 4px;
 }
 
 .ue1-popup-recur {
-	background-color: white;
+	background-color: transparent;
 	color: black;
 	margin-top: 4px;
 }
 
 .ue1-popup-recur-every {
-	background-color: white;
+	background-color: transparent;
 	color: black;
 	margin: 0px;
 	padding: 0px;
 }
 
 .ue1-popup-recur-next {
-	background-color: white;
+	background-color: transparent;
 	color: black;
 	margin: 0px;
 	padding: 0px;
