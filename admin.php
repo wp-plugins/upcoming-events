@@ -40,7 +40,7 @@ function ue1_install() {
 	add_option("ue1_show_type", "Events", "What ue1_show_num refers to");
 	add_option("ue1_feeds", array( array("url"=>"")));
 	add_option("ue1_widget", array("number" => 1));
-
+	add_option("ue1_css", "", "CSS rules to insert with the ue1 CSS file");
 }
 
 function ue1_options() {
