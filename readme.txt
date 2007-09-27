@@ -33,8 +33,7 @@ of the "Options" tab.
 
 == Frequently Asked Questions ==
 
-= I just updated to the current release from a version older than 0.5 and my
-Upcoming Events widget isn't showing up anymore. Why not? =
+= I just updated to the current release from a version older than 0.5 and my Upcoming Events widget isn't showing up anymore. Why not? =
 
 Starting in version 0.5 it's possible to have multiple widgets, each with a
 different set of feeds shown. Unfortunately, this required adding some new
@@ -45,8 +44,7 @@ settings like you had in 0.4 and below, that's all you need to do. If you want
 to play with the new options and abilities, you can add multiple Upcoming
 Events widgets and tweak the settings from each.
 
-= When I add the Upcoming Events plugin instead of a list of events I get a
-nasty looking SQL error. What can I do? =
+= When I add the Upcoming Events plugin instead of a list of events I get a nasty looking SQL error. What can I do? =
 
 There was a bug in version 0.3 and below that caused the plugin to not
 automatically add new feeds to the default sidebar. That was fixed for 0.4,
