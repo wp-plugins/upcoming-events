@@ -4,7 +4,7 @@ Tags: calendar, events, ical, feed
 Contributors: StarDestroyer, sjashe
 Requires at least: 2.0
 Tested up to: 2.3
-Stable tag: 0.4
+Stable tag: 0.5
 
 This plugin can receive iCalendar feeds from third party sites and display aggregated upcoming events from multiple feeds in your sidebar.
 
