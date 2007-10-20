@@ -143,13 +143,13 @@ class ical_event {
 			} elseif ( preg_match("/^description:(.*)$/i", $line, $m)) {
 				$tmp = preg_replace("/\\\\n/", "\n", $m[1]);
 				$this->desc = stripslashes($tmp);
-			} elseif ( preg_match("/^dtstart;tzid=(.+):([0-9]{4})([0-9]{2})([0-9]{2})t([0-9]{2})([0-9]{2})([0-9]{2})$/i", $line, $m) ) {
+			} elseif ( preg_match("/^dtstart(?:;tzid=(.+))?:([0-9]{4})([0-9]{2})([0-9]{2})t([0-9]{2})([0-9]{2})([0-9]{2})$/i", $line, $m) ) {
 				$this->start_tz = $m[1];
 				$tmp = mktime($m[5], $m[6], $m[7], $m[3], $m[4], $m[2]);
 				$this->start_time = $tmp;
 				$this->start_date = date("Ymd", $tmp);
 				$this->all_day = false;
-			} elseif ( preg_match("/^dtend;tzid=(.+):([0-9]{4})([0-9]{2})([0-9]{2})t([0-9]{2})([0-9]{2})([0-9]{2})$/i", $line, $m) ) {
+			} elseif ( preg_match("/^dtend(?:;tzid=(.+))?:([0-9]{4})([0-9]{2})([0-9]{2})t([0-9]{2})([0-9]{2})([0-9]{2})$/i", $line, $m) ) {
 				$this->end_tz = $m[1];
 				$tmp = mktime($m[5], $m[6], $m[7], $m[3], $m[4], $m[2]);
 				$this->end_time = $tmp;
