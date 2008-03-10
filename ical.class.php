@@ -160,9 +160,9 @@ class ical_event {
 				$this->start_date = $m[1];
 				$this->all_day=true;
 				if (empty($this->end_time)) {
-                                    $this->end_time = strtotime('+1 day', $this->start_time);
-				    $this->end_date = $this->start_date;
-                                }
+					$this->end_time = strtotime('+1 day', $this->start_time);
+					$this->end_date = $this->start_date;
+				}
 			} elseif ( preg_match("/^dtend;value=date:(.+)$/i", $line, $m) ) {
 				$this->end_time = strtotime($m[1]);
 				$this->end_date = date("Ymd", strtotime($m[1] . " -1 day"));
