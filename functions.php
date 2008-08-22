@@ -54,7 +54,7 @@ function ue1_update_ics($feed_code) {
 	foreach ($feeds as $feed) {
 	    /* Only Update if feed returns value, else leave old data */
 		if ( $feed_code == $feed["code_name"] &&
-			 $ics = file_get_contents($feed["url"])) {
+			 $ics = wp_remote_fopen($feed["url"])) {
 			    $wpdb->query("UPDATE $table SET
 					last_update = now(),
 					ics_data = '" . $wpdb->escape($ics) . "'
