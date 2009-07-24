@@ -167,6 +167,16 @@ class ical_event {
 				$this->end_time = strtotime($m[1]);
 				$this->end_date = date("Ymd", strtotime($m[1] . " -1 day"));
 				$this->all_day=true;
+			} elseif ( preg_match("/^dtstart:(.+)$/i", $line, $m)
+			AND $tmp = strtotime($m[1]) ) {
+				$this->start_time = $tmp;
+				$this->start_date = date("Ymd", $tmp);
+				$this->all_day=false;
+			} elseif ( preg_match("/^dtend:(.+)$/i", $line, $m)
+			AND $tmp = strtotime($m[1]) ) {
+				$this->end_time = $tmp;
+				$this->end_date = date("Ymd", $tmp);
+				$this->all_day=false;
 			} elseif ( preg_match("/^duration:(.+)$/i", $line, $m) ) {
 				$dur = array();
 				if ( preg_match("/T(\d+)H/i", $m[1], $p) ) {
@@ -320,11 +330,11 @@ class ical_event {
 		# We've figured out when the next recurrance would be. Let's
 		# make sure it makes sense, set the *_date variables and return
 		# the next recurrance.
-                if ( $this->r_until < $this->start_time ) {
+		if ( $this->r_until < $this->start_time ) {
 			# What would be the next scheduled recurrence is after
 			# the last date of this event
-                        return null;
-                }
+			return null;
+		}
 
 		$this->start_date = date("Ymd", $this->start_time);
 		$this->end_date = date("Ymd", $this->end_time);
